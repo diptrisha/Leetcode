@@ -1,3 +1,6 @@
+// Recursive 
+// Time complexity - O(n) Space Complexity - O(n)
+
 class Solution {
     public boolean isSymmetric(TreeNode root) {
         return isMirror(root, root);  //helper function 
@@ -12,3 +15,6 @@ class Solution {
         return (t1.val == t2.val) && isMirror(t1.right, t2.left) && isMirror(t1.left, t2.right);
     }
 }
+
+
+//Iterative
