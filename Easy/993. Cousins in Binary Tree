@@ -1,0 +1,74 @@
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+/*
+bfs -- store level, node, parent
+Q - (1,0,P1) (2,1,P2) (3,1,P2) (4,2, P2) (5,2, P5)
+*/
+class Solution {
+    public boolean isCousins(TreeNode root, int x, int y) {
+        Queue<Pair> q = new LinkedList<Pair>();
+        q.add(new Pair(0,root, -1));
+        int parentX = -5;
+        int parentY = -5;
+        int depthX = -5;
+        int depthY = -5;
+        while(!q.isEmpty())
+        {
+            Pair popped = q.poll();
+            
+            if(popped.node.val == x)
+            {
+                parentX = popped.nodeParent;
+                depthX = popped.level;
+              
+            }
+            if( popped.node.val == y)
+            {
+                parentY = popped.nodeParent;
+                depthY = popped.level;
+            }
+            if(depthX == depthY && parentX != parentY)
+            {
+                return true;
+            }
+           
+            if(popped.node.left != null)
+            {
+                q.add(new Pair(popped.level+1, popped.node.left, popped.node.val));
+            }
+            if(popped.node.right != null)
+            {
+                q.add(new Pair(popped.level+1, popped.node.right, popped.node.val));
+            }
+        }
+        return false;
+    }
+    
+}
+
+class Pair{
+    int level;
+    TreeNode node;
+    int nodeParent;
+    
+    public Pair(int l, TreeNode n, int p)
+    {
+        this.level = l;
+        this.node = n;
+        this.nodeParent = p;
+        
+    }
+}
