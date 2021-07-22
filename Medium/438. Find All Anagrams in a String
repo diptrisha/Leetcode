@@ -1,0 +1,64 @@
+//Time Complexity : O(n)
+//Space Complexity : O(n)
+
+
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        ArrayList<Integer> li = new ArrayList<>();
+        //create hashmap of all letters in pattern p
+        Map<Character, Integer> letterMap = new HashMap<>();
+        for(int i=0;i<p.length();i++)
+        {
+            char c = p.charAt(i);
+            letterMap.put(c, letterMap.getOrDefault(c,0)+1);
+        }
+        
+        int count = letterMap.size();
+        int i=0,j=0;
+        int k = p.length();
+        char [] arr = s.toCharArray();
+        while(j< s.length())
+        {
+            //we decrement the count in the map by one as we traverse the string s 
+            // once all of one letter's count is 0, we decrement the count var by 1
+            if(letterMap.containsKey(arr[j]))
+            {
+                letterMap.put(arr[j],letterMap.get(arr[j])-1);
+                if(letterMap.get(arr[j])==0)
+                {
+                    count--;
+                }
+            }
+            
+            //check if window size is reached
+            if(j-i+1 < k)
+            {
+                j++;
+            }
+             //we have hit the window
+            //check if count of distinct characters is zero, if its 0, then we add the index 
+            //i to list as its anagram
+            else if(j-i+1 == k)
+            {
+                if(count==0)
+                    li.add(i);
+                
+                // reverse the calculation as done by index j, as we slide window further
+                // so character count is incremented
+                if(letterMap.containsKey(arr[i]))
+                {
+                    letterMap.put(arr[i],letterMap.get(arr[i])+1);
+                    if(letterMap.get(arr[i])==1)
+                    {
+                        count++;
+                    } 
+                }
+                i++;
+                j++;
+                
+                
+            }
+        }
+        return li;
+    }
+}
