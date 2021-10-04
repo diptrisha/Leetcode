@@ -1,0 +1,98 @@
+#include<iostream>
+#include<fstream>
+#include<vector>
+#include<sstream> 
+#include<string>
+
+using namespace std;
+string filename;
+
+string getNextToken()
+{
+    char delimeter[] = " \t\n";
+    string token;
+    ifstream f;
+    while(!f.eof())
+    {
+        f.open(filename);
+        while(getline(f, token)) {
+
+                istringstream line(token);
+                
+                while(line >> token) {
+                //cout << "Tok-" << token << endl;
+                return token;
+                
+                if(f.unget().get() == '\n') {
+                    cout << "newline found" << endl;
+                }
+                }
+        }
+    }
+    return "$";
+}
+
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+int readInt()
+{
+    string tok;
+    tok = getNextToken();
+    if(is_number(tok))
+    {
+        return stoi(tok);
+    }
+    return 0;
+}
+
+string readSymbol()
+{
+    string token = getNextToken();
+}
+
+string readIAER()
+{
+
+}
+void passOne(string filename)
+{
+    int defCount = readInt();
+    cout<<"defCount"<<defCount<<endl;
+    for(int i = 0;i<defCount;i++)
+    {
+        string sym = readSymbol();
+    }
+   
+   //cout<<"hello pass1"<<endl;
+    //string tok;
+    //ifstream f;
+   // while(!f.eof())
+   // {
+       // f.open(filename);
+        
+        
+    //}
+    
+    
+}
+int main(int argc, char *argv[]){
+    
+   if(argc!=2)
+    {
+        cout<<" Wrong Inputs \n";
+        exit(0);
+    }
+
+    ifstream f;
+    
+    filename = argv[1];
+    f.open(filename);
+    passOne(filename);
+    f.close();
+    
+    return 0;
+}
