@@ -16,8 +16,9 @@ string getLineFromFile;
 char* token = NULL;
 int instructionCount = 0;
 int tot_inst_count=0;
-vector<Symbol> symbollist;
-vector<Symbol> :: const_iterator symit;
+int eof = 0;
+
+//vector<Symbol> :: const_iterator symit;
 vector<int>mod_offset;
 class Symbol{
 
@@ -28,17 +29,22 @@ class Symbol{
         int module_number;
         bool isSymUsed = false;
         bool isSymDefined = false;
+        bool isMultipleTimesDef = false;
 
-        void assignValue(int value){
-
+        std::ostream & out( std::ostream &os ) const
+        {
+        return ( os << "symbol_name = " << symbol_name << ", relative_address  = " << relative_address );
         }
+        
 };
+vector<Symbol>symbollist;
 class Module{
     public:
         int mod_number;
         int mod_length;
-        int address;
+        int baseaddress;
        // vector<
+       
 };
 void __parseerror(int errcode) 
 {
@@ -58,47 +64,60 @@ string getNextToken()
 {
     char delimeter[] = " \t\n";
     
-    //ifstream fp(filename);
-    if(f.is_open())
+    /*while(getLineFromFile.empty()){
+         getline(f, getLineFromFile);
+         cout<<"yes yes yes "<<endl;
+    }*/
+    if(!f.eof())
     {
         cout<<"getTok"<<endl;
+    
         if(token == NULL){
             //Store Line temp
             getline(f, getLineFromFile);
-            //line_no++;
-            if(getLineFromFile.length()==0)
-            {
-                while(getLineFromFile.length()==0 & !f.eof())
-                {
-                    getline(f, getLineFromFile);
-                    line_no++;
-                }
-            }
-            else{
-                line_no++;
-            }
-            
             int len = getLineFromFile.size();
             char* str = new char[len+1];
             strcpy(str, getLineFromFile.c_str());
             token = strtok(str, delimeter);
-            //Stored Line Find. 
+            cout<<"Inside token is null"<<endl;
         } else {
             //line = "";
             token = strtok(NULL, delimeter);
+             line_offset = token - getLineFromFile.c_str();
+            cout<<"Not in token is null"<<endl;
         }
-    //    while(token == NULL){ 
-                
-    //             cout << "Token:" << token << "\n";
-    //             token = strtok(NULL, delimeter); //took out new line char here too
-    //         getline(f, getLineFromFile);
-    //         line_no++;
-    //         int len = getLineFromFile.size();
-    //         char* str = new char[len+1];
-    //         strcpy(str, getLineFromFile.c_str());
-    //         token = strtok(str, delimeter);
-    //         }
+       while(token == NULL){ 
+               // cout << "Token:" << token << "\n";
+               cout<<"token is null  "<<endl;
+                getline(f, getLineFromFile);
+                line_no++;
+                while(getLineFromFile.empty() && !f.eof()){
+                    getline(f, getLineFromFile);
+                    line_no++;
+                }
+                if(getLineFromFile.empty() && f.eof()){
+                    cout<<"Setting eof to -1"<<endl;
+                    eof = 1;
+                    string st = "eof";
+                    int len = st.size();
+                char* str = new char[len+1];
+                strcpy(str, st.c_str());
+                    token = str;
+                    
+                    break;
+                }
+                int len = getLineFromFile.size();
+                char* str = new char[len+1];
+                strcpy(str, getLineFromFile.c_str());
+                token = strtok(str, delimeter);
+            }
+    } else {
+        string t = "eof";
+        int len = t.size();
+        char* t2 = new char[len+1];
+        token = t2;
     }
+    cout<<"reaching here"<<endl;
     return token;
 }
 
@@ -110,9 +129,16 @@ bool is_number(const std::string& s)
 }
 int readInt()
 {
+    
     string tok;
+    cout<<"Trying to get int "<<endl;
     tok = getNextToken();
-    cout<<"tok:"<<tok<<endl;
+    cout<<"after this "<<endl;
+    if(eof == 1){
+        cout<<"yes eof is 1"<<endl;
+        return -1;
+    }
+    cout<<"tok: "<<tok<<endl;
     if(is_number(tok))
     {
         return stoi(tok);
@@ -128,14 +154,22 @@ string readSymbol()
     return token;
 }
 
-string readIAER()
+char readIAER()
 {
-    return "a";
+    string token = getNextToken();
+    const char* c = token.c_str();
+    if(c[0]!='I' && c[0]!='R' && c[0]!='E' && c[0]!='A')
+    {
+        //parseerror(2);
+    }
+    return c[0];
 }
-void createSymbol(Symbol sym, int value , int instructionCount)
+void createSymbol(Symbol sym, int value , int tot_in)
 {
+    //isDefined = true;
     sym.relative_address = value;
-    sym.base_address = value + instructionCount;
+    sym.base_address = value + tot_in;
+    sym.isSymDefined = true;
     symbollist.push_back(sym);
 
 }
@@ -148,20 +182,33 @@ void passOne()
     //Module module;
     while(!f.eof())
     {
-        int defCount = readInt();
-    cout<<"defCount"<<defCount<<endl;
+        cout<<"Starting new module "<<endl;
+    int defCount = readInt();
+    if(defCount == -1){
+        cout<<"yes defcout is -1"<<endl;
+        break;
+    }
+    cout<<"defCount: "<<defCount<<endl;
     int mod_num = 1;
     //module.mod_number++;
+    //compute mod base addr if checks if mod present or not 
     for(int i = 0;i<defCount;i++)
     {
         Symbol sym;
         sym.symbol_name = readSymbol();
+        cout<<"sym name: "<< sym.symbol_name<<endl;
         int value = readInt();
         sym.module_number = mod_num;
-        createSymbol(sym, value, instructionCount);
+        //if sym is already defined then dont call createSym , isdefined = 1 else createSym
+        if(!sym.isSymDefined)
+        {
+            createSymbol(sym, value, tot_inst_count);
+        }
+        
     }
 
     int useCount = readInt();
+    cout<<"usecount: "<<useCount<<endl;
     for(int i=0;i<useCount;i++)
     {
         Symbol sym;
@@ -170,26 +217,32 @@ void passOne()
     }
 
     int instr;
-     instructionCount = readInt();
-     instr = instructionCount;
-     while (instructionCount--)
-     {
-         /* code */
-     }
+    instructionCount = readInt();
+     cout<<"instructionCount"<<instructionCount<<endl;
+    tot_inst_count += instructionCount;
+    cout<<"tot no of instruction cout: "<<tot_inst_count;
+    instr = instructionCount;
+    // while (instructionCount--)
+    // {
+    //     /* code */
+    // }
      
     for(int i=0;i<instructionCount;i++)
     {
+        char addressmode = readIAER();
+        int instruction = readInt();
 
     }
-    if(instructionCount==0){
-        //
-        mod_num++;
-        //mod_ffset[mod_num-1] = tot_instrc_count;
-    }
+    mod_num++;
+    // if(instructionCount==0){
+    //     //
+    //     mod_num++;
+    //     //mod_ffset[mod_num-1] = tot_instrc_count;
+    // }
+   cout<<"Module over"<<endl;
    
-   
     }
-    
+    cout<<"After eof"<<endl;
 
    //cout<<"hello pass1"<<endl;
     //string tok;
@@ -202,6 +255,14 @@ void passOne()
     //}
     
     
+}
+void printSymbolTable()
+{
+    cout<<"---Symbol Table---"<<endl;
+    for(const Symbol &s: symbollist)
+    {
+        s.out( std::cout ) << std::endl;
+    }
 }
 //print sym table func 
 int main(int argc, char *argv[]){
@@ -217,6 +278,7 @@ int main(int argc, char *argv[]){
     f.open(filename);
     passOne();
     // call print sym table
+    printSymbolTable();
     f.close();
     //fclose(infile);
     return 0;
