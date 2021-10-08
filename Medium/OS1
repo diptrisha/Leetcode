@@ -4,6 +4,7 @@
 #include<vector>
 #include<sstream> 
 #include<string>
+#include <algorithm>
 #include<string.h>
 
 using namespace std;
@@ -33,11 +34,12 @@ class Symbol{
 
         std::ostream & out( std::ostream &os ) const
         {
-        return ( os << "symbol_name = " << symbol_name << ", relative_address  = " << relative_address );
+        return ( os << "symbol_name = " << symbol_name << ", relative_address  = " << base_address );
         }
         
 };
 vector<Symbol>symbollist;
+vector<Symbol>uselistSymbols;
 class Module{
     public:
         int mod_number;
@@ -175,21 +177,20 @@ void createSymbol(Symbol sym, int value , int tot_in)
 }
 void passOne()
 {
-    
     cout<<"hello pass1"<<endl;
-    //vector<Module> modules;
     
-    //Module module;
+    int mod_num = 1;
+ 
     while(!f.eof())
     {
         cout<<"Starting new module "<<endl;
-    int defCount = readInt();
-    if(defCount == -1){
-        cout<<"yes defcout is -1"<<endl;
-        break;
+        int defCount = readInt();
+        if(defCount == -1){
+            cout<<"yes defcout is -1"<<endl;
+            break;
     }
     cout<<"defCount: "<<defCount<<endl;
-    int mod_num = 1;
+   
     //module.mod_number++;
     //compute mod base addr if checks if mod present or not 
     for(int i = 0;i<defCount;i++)
@@ -222,11 +223,7 @@ void passOne()
     tot_inst_count += instructionCount;
     cout<<"tot no of instruction cout: "<<tot_inst_count;
     instr = instructionCount;
-    // while (instructionCount--)
-    // {
-    //     /* code */
-    // }
-     
+    
     for(int i=0;i<instructionCount;i++)
     {
         char addressmode = readIAER();
@@ -244,18 +241,9 @@ void passOne()
     }
     cout<<"After eof"<<endl;
 
-   //cout<<"hello pass1"<<endl;
-    //string tok;
-    //ifstream f;
-   // while(!f.eof())
-   // {
-       // f.open(filename);
-        
-        
-    //}
-    
     
 }
+
 void printSymbolTable()
 {
     cout<<"---Symbol Table---"<<endl;
@@ -264,7 +252,119 @@ void printSymbolTable()
         s.out( std::cout ) << std::endl;
     }
 }
-//print sym table func 
+ 
+void passTwo()
+{
+    cout<<"hello from pass2"<<endl;
+    int mod_num = 1;
+
+    while(!f.eof())
+    {
+        cout<<"Starting new module "<<endl;
+        int defCount = readInt();
+        if(defCount == -1){
+            cout<<"yes defcout is -1"<<endl;
+            break;
+        }
+        cout<<"defCount: "<<defCount<<endl;
+   
+        //module.mod_number++;
+        //compute mod base addr if checks if mod present or not 
+        for(int i = 0;i<defCount;i++)
+        {
+            Symbol sym;
+            sym.symbol_name = readSymbol();
+            cout<<"sym name: "<< sym.symbol_name<<endl;
+            int value = readInt();
+            sym.module_number = mod_num;
+        }
+
+        int useCount = readInt();
+        cout<<"usecount: "<<useCount<<endl;
+        for(int i=0;i<useCount;i++)
+        {
+            Symbol sym;
+            sym.symbol_name = readSymbol();
+            if ( std::find(symbollist.begin(), symbollist.end(), sym.symbol_name) != symbollist.end())
+            {
+                sym.isSymUsed = true;
+            }
+            uselistSymbols.push_back(sym);
+
+            //store in use lis vec
+        }
+
+        int instrC;
+        instructionCount = readInt();
+        cout<<"instructionCount"<<instructionCount<<endl;
+        tot_inst_count += instructionCount;
+        cout<<"tot no of instruction cout: "<<tot_inst_count;
+        instrC = instructionCount;
+        
+        while(instructionCount-- > 0)
+        {
+            char addressmode = readIAER();
+            int instruction = readInt();
+
+            int opcode = instruction/1000;
+            int operand = instruction % 1000;
+            int finalAddress = 0;
+            string errormessage = "";
+
+            switch (addressmode)
+            {
+            case 'A':
+                    if(operand<512)
+                    {
+                        finalAddress = instruction;
+                    }
+                    else
+                    {
+                        errormessage = "Error: Absolute address exceeds machine size; zero used";
+                        finalAddress = opcode*1000;
+                        //errorS = true;
+                    }
+                    break;
+            case 'R':
+                    instruction = instruction + tot_inst_count;
+                    if(instruction % 1000 >= tot_inst_count + instrC)
+                    {
+                         errormessage = "Error: Relative address exceeds module size; zero used";
+                         instruction = opcode * 1000 + tot_inst_count;
+                    }
+                    finalAddress = instruction;
+                    break;
+            case 'E':
+                break;
+            case 'I':
+                    if(instruction>9999)
+                    {
+                        instruction = 9999;
+                        errormessage = "Error: Illegal immediate value; treated as 9999";
+                        //errorS = true;
+                    }
+                    finalAddress = instruction;
+                    break;
+            default:
+                break;
+            }
+
+        }
+
+        mod_num++;
+    
+        cout<<"Module over"<<endl;
+   
+    }
+
+    cout<<"After eof"<<endl;
+}
+
+void printMemoryMap()
+{
+
+}
+
 int main(int argc, char *argv[]){
     
    if(argc!=2)
@@ -281,5 +381,10 @@ int main(int argc, char *argv[]){
     printSymbolTable();
     f.close();
     //fclose(infile);
+    f.open(filename);
+    passTwo();
+    printMemoryMap();
+    f.close();
+
     return 0;
 }
