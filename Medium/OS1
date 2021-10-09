@@ -32,8 +32,11 @@ class Symbol{
         bool isSymDefined = false;
         bool isMultipleTimesDef = false;
 
-
-        string getSymbolName()
+        Symbol(string symbolName)
+        {
+            symbol_name = symbolName;
+        }
+        std:: string getSymbolName ()
         {
             return symbol_name;
         }
@@ -41,6 +44,7 @@ class Symbol{
         {
             return relative_address;
         }
+        
         std::ostream & out( std::ostream &os ) const
         {
         return ( os << "symbol_name = " << symbol_name << ", relative_address  = " << base_address );
@@ -206,7 +210,7 @@ void passOne()
     //compute mod base addr if checks if mod present or not 
     for(int i = 0;i<defCount;i++)
     {
-        Symbol sym;
+        Symbol sym("");
         sym.symbol_name = readSymbol();
         //cout<<"sym name: "<< sym.symbol_name<<endl;
         int value = readInt();
@@ -223,7 +227,7 @@ void passOne()
     //cout<<"usecount: "<<useCount<<endl;
     for(int i=0;i<useCount;i++)
     {
-        Symbol sym;
+        Symbol sym("");
         sym.symbol_name = readSymbol();
         //store in use lis vec
     }
@@ -285,7 +289,7 @@ void passTwo()
         //compute mod base addr if checks if mod present or not 
         for(int i = 0;i<defCount;i++)
         {
-            Symbol sym;
+            Symbol sym("");
             sym.symbol_name = readSymbol();
             //cout<<"sym name: "<< sym.symbol_name<<endl;
             int value = readInt();
@@ -296,7 +300,7 @@ void passTwo()
         //cout<<"usecount: "<<useCount<<endl;
         for(int i=0;i<useCount;i++)
         {
-            Symbol sym;
+            Symbol sym("");
             sym.symbol_name = readSymbol();
             string str = sym.symbol_name;
             auto it = find_if(symbollist.begin(), symbollist.end(), [&str]( Symbol& s) {return s.getSymbolName() == str;});
@@ -325,9 +329,13 @@ void passTwo()
             int operand = instruction % 1000;
             finalAddress = 0;
             string errormessage = "";
-            Symbol s1;
+            Symbol s1("");
             int index;
             string str;
+            int rel_add;
+            Symbol sym("");
+            Symbol S("");
+            
             switch (addressmode)
             {
             case 'A':
@@ -368,13 +376,30 @@ void passTwo()
                     index = operand;
                     s1 = uselistSymbols.at(index);
                     str = s1.getSymbolName();
-                    it = find(symbollist.begin(), symbollist.end(), [&str]( Symbol& s) {return s.getSymbolName() == str;});
-                    if (it != symbollist.end())
+                    //cout<<"str here :"<<str<<endl;
+                    // it = find_if(symbollist.begin(), symbollist.end(), [&str]( Symbol& s) {return s.getSymbolName() == str;});
+                    // if (it != symbollist.end())
+                    // {
+                    //     rel_add =sym.getRelativeAddr();
+                    // }
+
+                    for(int u = 0;u<symbollist.size();u++)
                     {
-                        int rel_add= it->relative_address;
-                        cout<<"relative addr "<< rel_add;
+                        S = symbollist[u];
+                        if(S.symbol_name.compare(str)==0)
+                        {
+                            
+                            //int opc = opcode;
+                            rel_add = S.base_address;
+                            //cout<<"rel addr :"<<rel_add<<endl;
+                            finalAddress = (opcode*1000)+rel_add;
+                            //notfound = false;
+                            break;
+                        } 
+
+
                     }
-                    finalAddress = (opcode*1000)+s1.relative_address;
+                    //finalAddress = (opcode*1000)+rel_add;
                     //cout<<"symbol name-->"<<s1.symbol_name<<endl;
 
                     break;
