@@ -59,25 +59,54 @@ class Event
         Process* event_proc;
         TransitionState ts;
         State eventState;
+        Event(int timestamp, Process *proc, TransitionState tran, int eventID)
+        {
+            eventId = eventID;
+            eventTimestamp = timestamp;
+            event_proc = proc;
+            ts = tran;
+        }
 
 };
 Event* evt;
 deque<Event*> eventQ;
 class DES
 {
+    public:
+       
+        Event* get_event() 
+        {
+            Event* nwE = eventQ.front();
+            if(eventQ.empty())
+            {
+                return nullptr;
+            }
+            
+            eventQ.pop_front();
+            return nwE;
+        }
+        void add_event(Event* event)
+        {
+            deque <Event*> :: iterator eventIt;
+            //eventQ.push_back(event);
+            //int qsize = eventQ.size();
+            for (eventIt=eventQ.begin();eventIt!=eventQ.end();eventIt++)
+            {
+                if(event->eventTimestamp<(*eventIt)->eventTimestamp)
+                {
+                     
+                    break;
+                }
+            }
+            eventQ.insert(eventIt,event);
+        }
+        void remove_event()
+        {
+            eventQ.pop_front();
+        }
 
 };
-Event* get_event() 
-{
-    Event* nwE = eventQ.front();
-    if(eventQ.empty())
-    {
-        return nullptr;
-    }
-    
-    eventQ.pop_front();
-    return nwE;
-}
+
 void readfile()
 {
     int proc_id ;
@@ -93,25 +122,30 @@ void readfile()
         cout<<CB<<endl;
         cout<<IB<<endl;
         ptr = new Process();
-       
-        
         ptr->arrTime = AT;
         cout<<"ptr arr time "<<ptr->arrTime<<endl;
         ptr->tot_cpuTime = TC;
         ptr->cpu_burst = CB;
         ptr->io_burst = IB;
-
-        	
         ptr->pID = proc_id;
         proc_id++;
-        evt = new Event();
-        evt->event_proc = ptr;
-        evt->eventTimestamp = ptr->arrTime;
-        evt->eventState = CREATED;
-        eventQ.push_back(evt);
+        //evt = new Event();
         processes.push_back(ptr);
+       
+        
     }
     input.close();
+    DES* desLayer = new DES();
+    Event *evt;
+    for (int i = 0; i<processes.size(); ++i){
+        
+        evt = new Event(processes[i]->arrTime, processes[i], TRANS_TO_READY, processes[i]->pID);
+        desLayer->add_event(evt);
+    }
+
+}
+void readRandomFile()
+{
 
 }
 int main(int argc, char* argv[])
@@ -143,6 +177,7 @@ int main(int argc, char* argv[])
 
     // }
     readfile();
+    readRandomFile();
     for(processIt=processes.begin(); processIt!= processes.end();processIt++)
     {
         //processes[i]->printprocc();
@@ -152,5 +187,18 @@ int main(int argc, char* argv[])
         cout<<"cpu burst:"<<p->cpu_burst<<endl;
         cout<<"io  burst:"<<p->io_burst<<endl;
         cout<<"process id:"<<p->pID<<endl;
+    }
+
+    
+    cout<<"--EVENT QUEUE--"<<endl;
+    cout<<"process size is -> "<< processes.size()<<endl;
+    cout<<"event que size is ->"<< eventQ.size()<<endl;
+    for (auto it = eventQ.begin(); it != eventQ.end(); ++it)
+    {
+        Event* e = *it;
+        cout<<"event id:"<<e->eventId<<endl;
+        cout<<"event timestamp:"<<e->eventTimestamp<<endl;
+        //cout<<"event state:"<<e->eventState<<endl;
+        
     }
 }
