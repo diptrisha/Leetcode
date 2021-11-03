@@ -1,0 +1,156 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <stdlib.h>
+#include <sstream>
+#include <iomanip>
+#include <cstring>
+#include <stack>
+#include <deque>
+#include <algorithm>
+#include <getopt.h>
+using namespace std;
+int verbosemode=0;
+enum State {CREATED, READY, RUNNING, BLOCKED, DONE};
+enum TransitionState {TRANS_TO_READY, TRANS_TO_RUN, TRANS_TO_BLOCK, TRANS_TO_DONE, TRANS_TO_PREEMPT};
+
+class Process
+{
+    public:
+        int arrTime=0, tot_cpuTime=0, cpu_burst=0, io_burst=0;
+        int pID =0;
+        // Process(int at, int ct, int cb, int ib)
+        // {
+        //     arrTime = at;
+        //     tot_cpuTime = ct;
+        //     cb = cpu_burst;
+        //     ib = io_burst;
+        // }
+         void printprocc()
+  {
+      cout<<"PID->"<<pID<<" "
+          <<"AT->"<<arrTime<<" "
+          <<"TC->"<<tot_cpuTime<<" "
+          <<"CB->"<<cpu_burst<<" "
+          <<"IO->"<<io_burst<<endl;
+
+
+
+  }
+
+};
+Process* ptr;
+vector <Process*> processes;
+vector <Process*> :: const_iterator processIt;
+class Scheduler
+{
+public:
+	virtual void add_process(Process*) = 0;
+	virtual Process* get_next_process() = 0;
+	virtual void test_preempt(Process*, int)=0;
+};
+Scheduler* s;
+class Event
+{
+    public:
+        int eventId;
+        int eventTimestamp;
+        Process* event_proc;
+        TransitionState ts;
+        State eventState;
+
+};
+Event* evt;
+deque<Event*> eventQ;
+class DES
+{
+
+};
+Event* get_event() 
+{
+    Event* nwE = eventQ.front();
+    if(eventQ.empty())
+    {
+        return nullptr;
+    }
+    
+    eventQ.pop_front();
+    return nwE;
+}
+void readfile()
+{
+    int proc_id ;
+    int AT,TC,CB,IB=0;
+    ifstream input;
+    input.open("C:/Users/TRISHA/Documents/C++/input1");
+    string line;
+    while (getline(input, line)){
+        istringstream tokens(line);
+        tokens >> AT >> TC >> CB >> IB;
+        cout<<AT<<endl;
+        cout<<TC<<endl;
+        cout<<CB<<endl;
+        cout<<IB<<endl;
+        ptr = new Process();
+       
+        
+        ptr->arrTime = AT;
+        cout<<"ptr arr time "<<ptr->arrTime<<endl;
+        ptr->tot_cpuTime = TC;
+        ptr->cpu_burst = CB;
+        ptr->io_burst = IB;
+
+        	
+        ptr->pID = proc_id;
+        proc_id++;
+        evt = new Event();
+        evt->event_proc = ptr;
+        evt->eventTimestamp = ptr->arrTime;
+        evt->eventState = CREATED;
+        eventQ.push_back(evt);
+        processes.push_back(ptr);
+    }
+    input.close();
+
+}
+int main(int argc, char* argv[])
+{
+   //string filename =  string(argv[argc-2]);
+   //string filename = "inp"
+    string randfile =  string(argv[argc-1]); 
+    int c = 0;
+    int pid =0;
+    string schedulingInput;
+    
+    // while((c = getopt (argc, argv, "vtes")) != -1)
+    // {
+    //     switch (c)
+    //       {
+    //         case 'v':
+    //             verbosemode = 1;
+    //             break;
+    //         case 'e':
+    //             break;
+    //         case 't':
+    //             break;
+    //       case 's':
+    //         schedulingInput = optarg;
+    //         break;
+    //         default:
+    //         break;
+    //       }
+
+    // }
+    readfile();
+    for(processIt=processes.begin(); processIt!= processes.end();processIt++)
+    {
+        //processes[i]->printprocc();
+        Process* p = *processIt;
+        cout<<"arr time:"<<p->arrTime<<endl;
+        cout<<"cpu time:"<<p->tot_cpuTime<<endl;
+        cout<<"cpu burst:"<<p->cpu_burst<<endl;
+        cout<<"io  burst:"<<p->io_burst<<endl;
+        cout<<"process id:"<<p->pID<<endl;
+    }
+}
